@@ -5,6 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from fpdf import FPDF
 import os
 
+
 app = Flask(__name__)
 CORS(app, origins="http://localhost:5173")
 
@@ -59,7 +60,6 @@ class Proposta(db.Model):
 
 # Rotas
 ## Rota inicial
-
 @app.route('/')
 def home():
     return "Bem vindo ao Gerador de Propostas!"
@@ -96,6 +96,7 @@ def login():
     
     return jsonify({"mensagem": "Login realizado com sucesso!"})
 
+# TODO inserir para trazer o id do usuario de acordo com o usuário que estiver logado
 # rota para criar uma proposta
 @app.route('/proposta', methods=['POST'])
 def criar_propostas():
@@ -105,7 +106,7 @@ def criar_propostas():
     preco = dados.get('preco')
     cliente = dados.get('cliente')
     usuario_id = dados.get('usuario_id')
-    
+
     nova_proposta = Proposta(
         titulo=titulo,
         descricao=descricao,
@@ -118,6 +119,8 @@ def criar_propostas():
     
     return jsonify({"mensagem": "Proposta criada com sucesso!"})
 
+
+# TODO Na rota para consultar a proposta alterar o id para o Nome do Usuário
 # rota para listar as propostas de um usuário
 @app.route('/propostas/<int:usuario_id>', methods=['GET'])
 def listar_propostas(usuario_id):
@@ -145,6 +148,17 @@ def baixar_pdf_proposta(proposta_id):
     
     return send_file(caminho_pdf, as_attachment=True)
 
+# rota para deletar uma proposta
+@app.route('/proposta/<int:proposta_id>', methods=['DELETE'])
+def deletar_proposta(proposta_id):
+    proposta = Proposta.query.get_or_404(proposta_id) # busca proposta ou retorna erro
+    db.session.delete(proposta) # remove a proposta
+    db.session.commit()
+
+    return jsonify({'message':'Proposta deletada com sucesso!'})
+
+
+# executando o app
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()     # cria as tabelas no banco de dados
