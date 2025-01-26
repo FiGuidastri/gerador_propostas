@@ -5,6 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from fpdf import FPDF
 import os
 
+#TODO criar rotas para login no app
 
 app = Flask(__name__)
 CORS(app, origins="http://localhost:5173")
