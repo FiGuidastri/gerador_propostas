@@ -1,11 +1,15 @@
+import os
+import jwt
+import datetime
 from flask import Flask, request, jsonify, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 from fpdf import FPDF
-import os
 
 #TODO criar rotas para login no app
+
+SECRET_KEY = 'root'
 
 app = Flask(__name__)
 CORS(app, origins="http://localhost:5173")
@@ -87,15 +91,17 @@ def cadastrar_usuario():
 @app.route('/login', methods=['POST'])
 def login():
     dados = request.json
-    email = dados.get('email')
-    senha = dados.get('senha')
+    usuario = Usuario.query.filter_by(email=dados['email']).first()
     
-    usuario = Usuario.query.filter_by(email=email).first()
-    
-    if not usuario or not check_password_hash(usuario.senha, senha):
-        return jsonify({'erro': 'Email ou senha incorretos'}), 400
-    
-    return jsonify({"mensagem": "Login realizado com sucesso!"})
+    if usuario and check_password_hash(usuario.senha, dados['senha']):
+        token =jwt.encode({
+            'id': usuario.id,
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+        }, SECRET_KEY, algorithm='HS256')
+        
+        return jsonify({'token': token}), 200
+    else:
+        return jsonify({"message": "Crecendiais inválidas!"})
 
 # TODO inserir para trazer o id do usuario de acordo com o usuário que estiver logado
 # rota para criar uma proposta
